@@ -1,15 +1,13 @@
 ﻿using System;
 using System.Windows;
-using System.Diagnostics;
 using System.Net;
-using System.Windows.Controls;
 using System.Web;
 using System.IO;
 using System.Media;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-
+using Microsoft.Translator.Samples;
 
 namespace MSTranslatorTAPDemo
 {
@@ -17,87 +15,46 @@ namespace MSTranslatorTAPDemo
     /// The goal of this WPF app is to demonstrate code for getting a security token, and translating a word or phrase into another langauge.
     /// The target langauge is selected from a combobox. The text of the translation is displayed and the translation is heard as speech.
     /// </summary>
-    /// 
-
-    public class AdmAccessToken
-    {
-        public string access_token { get; set; }
-        public string token_type { get; set; }
-        public string expires_in { get; set; }
-        public string scope { get; set; }
-    }
-
     public partial class MainWindow : Window
     {
+        // Before running the application, input the secret key for your subscription to Translator Text Translation API.
+        private const string TEXT_TRANSLATION_API_SUBSCRIPTION_KEY = "ENTER_YOUR_CLIENT_SECRET";
 
-        string languageCode = "en"; //set english as the default
-        string[] friendlyName = {" "}; //Array for passing languages codes to get friendly name
-        List<string> speakLanguages; //List of langauges for speech
-        static string headerValue; //used for auth in http header
-        Dictionary<string, string> languageCodesAndTitles = new Dictionary<string, string>(); //create dictionary to receive the language codes and friendly names
+        // Object to get an authentication token
+        private AzureAuthToken tokenProvider;
+        // Cache language friendly names
+        private string[] friendlyName = {" "};
+        // Cache list of languages for speech synthesis
+        private List<string> speakLanguages;
+        // Dictionary to map language code from friendly name
+        private Dictionary<string, string> languageCodesAndTitles = new Dictionary<string, string>();
 
         public MainWindow()
         {
             InitializeComponent();
-            AccessToken(); //Get token, it expire after 10 minutes.
+            tokenProvider = new AzureAuthToken(TEXT_TRANSLATION_API_SUBSCRIPTION_KEY);
             GetLanguagesForTranslate(); //List of languages that can be translated
-            GetLanguageNamesMethod(headerValue, friendlyName); //Friendly name of languages that can be translated
-            GetLanguagesForSpeakMethod(headerValue); //List of languages that have a synthetic voice for text to speech
+            GetLanguageNamesMethod(tokenProvider.GetAccessToken(), friendlyName); //Friendly name of languages that can be translated
+            GetLanguagesForSpeakMethod(tokenProvider.GetAccessToken()); //List of languages that have a synthetic voice for text to speech
             enumLanguages(); //Create the drop down list of langauges
         }
 
         //*****POPULATE COMBOBOX*****
         private void enumLanguages()
         {
-            
             //run a loop to load the combobox from the dictionary
             var count = languageCodesAndTitles.Count;
 
             for (int i = 0; i < count; i++)
             {
                 LanguageComboBox.Items.Add(languageCodesAndTitles.ElementAt(i).Key);
-
             }
-        }
-
-        
-        //*****GET AZURE DATA MARKTER (ADM) TOKEN*****
-        private void AccessToken()
-        {
-
-            string clientID = "ADD-CLIENTID";
-            string clientSecret = "ADD-CLIENTSECRET";
-
-            String strTranslatorAccessURI = "https://datamarket.accesscontrol.windows.net/v2/OAuth2-13";
-            String strRequestDetails = string.Format("grant_type=client_credentials&client_id={0}&client_secret={1}&scope=http://api.microsofttranslator.com", HttpUtility.UrlEncode(clientID), HttpUtility.UrlEncode(clientSecret));
-
-            WebRequest webRequest = WebRequest.Create(strTranslatorAccessURI);
-            webRequest.ContentType = "application/x-www-form-urlencoded";
-            webRequest.Method = "POST";
-
-            byte[] bytes = Encoding.ASCII.GetBytes(strRequestDetails);
-            webRequest.ContentLength = bytes.Length;
-
-            using (Stream outputStream = webRequest.GetRequestStream())
-            {
-                outputStream.Write(bytes, 0, bytes.Length);
-            }
-
-            WebResponse webResponse = webRequest.GetResponse();
-
-            System.Runtime.Serialization.Json.DataContractJsonSerializer serializer = new System.Runtime.Serialization.Json.DataContractJsonSerializer(typeof(AdmAccessToken));
-
-            //Get deserialized object from Stream
-            AdmAccessToken token = (AdmAccessToken)serializer.ReadObject(webResponse.GetResponseStream());
-
-            headerValue = "Bearer " + token.access_token; //create the string for the http header
         }
 
         //*****BUTTON TO START TRANSLATION PROCESS
         private void translateButton_Click(object sender, EventArgs e)
         {
-            AccessToken(); //get an access token for each translation because they expire after 10 minutes.
-
+            string languageCode;
             languageCodesAndTitles.TryGetValue(LanguageComboBox.Text, out languageCode); //get the language code from the dictionary based on the selection in the combobox
 
             if (languageCode == null)  //in case no language is selected.
@@ -114,7 +71,7 @@ namespace MSTranslatorTAPDemo
            
             WebRequest translationWebRequest = WebRequest.Create(uri);
 
-            translationWebRequest.Headers.Add("Authorization", headerValue); //header value is the "Bearer plus the token from ADM
+            translationWebRequest.Headers.Add("Authorization", tokenProvider.GetAccessToken()); //header value is the "Bearer plus the token from ADM
 
             WebResponse response = null;
 
@@ -135,7 +92,7 @@ namespace MSTranslatorTAPDemo
             if (speakLanguages.Contains(languageCode) && txtToTranslate != "")
             {
                 //call the method to speak the translated text
-                SpeakMethod(headerValue, xTranslation.InnerText, languageCode);
+                SpeakMethod(tokenProvider.GetAccessToken(), xTranslation.InnerText, languageCode);
             }
         }
 
@@ -183,7 +140,7 @@ namespace MSTranslatorTAPDemo
            
             string uri = "http://api.microsofttranslator.com/v2/Http.svc/GetLanguagesForTranslate";
             WebRequest WebRequest = WebRequest.Create(uri);
-            WebRequest.Headers.Add("Authorization", headerValue);
+            WebRequest.Headers.Add("Authorization", tokenProvider.GetAccessToken());
 
             WebResponse response = null;
 
@@ -220,7 +177,7 @@ namespace MSTranslatorTAPDemo
             string uri = "http://api.microsofttranslator.com/v2/Http.svc/GetLanguageNames?locale=en";
             // create the request
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(uri);
-            request.Headers.Add("Authorization", headerValue);
+            request.Headers.Add("Authorization", tokenProvider.GetAccessToken());
             request.ContentType = "text/xml";
             request.Method = "POST";
             System.Runtime.Serialization.DataContractSerializer dcs = new System.Runtime.Serialization.DataContractSerializer(Type.GetType("System.String[]"));
