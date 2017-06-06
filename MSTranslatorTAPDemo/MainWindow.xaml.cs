@@ -23,10 +23,13 @@ namespace MSTranslatorTAPDemo
 
         // Object to get an authentication token
         private AzureAuthToken tokenProvider;
+
         // Cache language friendly names
         private string[] friendlyName = {" "};
+
         // Cache list of languages for speech synthesis
         private List<string> speakLanguages;
+
         // Dictionary to map language code from friendly name
         private Dictionary<string, string> languageCodesAndTitles = new Dictionary<string, string>();
 
@@ -157,17 +160,12 @@ namespace MSTranslatorTAPDemo
                 response = WebRequest.GetResponse();
                 using (Stream stream = response.GetResponseStream())
                 {
-                    System.Runtime.Serialization.DataContractSerializer dcs =
-                        new System.Runtime.Serialization.DataContractSerializer(typeof(List<string>));
+                    DataContractSerializer dcs = new DataContractSerializer(typeof(List<string>));
                     List<string> languagesForTranslate = (List<string>) dcs.ReadObject(stream);
                     friendlyName =
                         languagesForTranslate
                             .ToArray(); //put the list of language codes into an array to pass to the method to get the friendly name.
                 }
-            }
-            catch
-            {
-                throw;
             }
             finally
             {
@@ -190,7 +188,7 @@ namespace MSTranslatorTAPDemo
             request.ContentType = "text/xml";
             request.Method = "POST";
             DataContractSerializer dcs = new DataContractSerializer(Type.GetType("System.String[]"));
-            using (System.IO.Stream stream = request.GetRequestStream())
+            using (Stream stream = request.GetRequestStream())
             {
                 dcs.WriteObject(stream, languageCodes);
             }
@@ -209,10 +207,6 @@ namespace MSTranslatorTAPDemo
                             languageCodes[i]); //load the dictionary for the combo box
                     }
                 }
-            }
-            catch
-            {
-                throw;
             }
             finally
             {
@@ -242,10 +236,6 @@ namespace MSTranslatorTAPDemo
                 {
                     return deserializeFunc(stream);
                 }
-            }
-            catch
-            {
-                throw;
             }
             finally
             {
