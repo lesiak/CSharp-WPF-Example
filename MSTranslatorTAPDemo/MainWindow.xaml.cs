@@ -24,9 +24,6 @@ namespace MSTranslatorTAPDemo
         // Object to get an authentication token
         private AzureAuthToken tokenProvider;
 
-        // Cache language friendly names
-        private string[] friendlyName = {" "};
-
         // Cache list of languages for speech synthesis
         private List<string> speakLanguages;
 
@@ -37,9 +34,8 @@ namespace MSTranslatorTAPDemo
         {
             InitializeComponent();
             tokenProvider = new AzureAuthToken(TEXT_TRANSLATION_API_SUBSCRIPTION_KEY);
-            GetLanguagesForTranslate(); //List of languages that can be translated
-            GetLanguageNamesMethod(tokenProvider.GetAccessToken(),
-                friendlyName); //Friendly name of languages that can be translated
+            var languageCodes = GetLanguageCodesForTranslate().ToArray();
+            GetLanguageNamesMethod(tokenProvider.GetAccessToken(), languageCodes);
             GetLanguagesForSpeakMethod(tokenProvider
                 .GetAccessToken()); //List of languages that have a synthetic voice for text to speech
             enumLanguages(); //Create the drop down list of langauges
@@ -147,7 +143,7 @@ namespace MSTranslatorTAPDemo
 
 
         //*****CODE TO GET TRANSLATABLE LANGAUGE CODES*****
-        private void GetLanguagesForTranslate()
+        private List<string> GetLanguageCodesForTranslate()
         {
             string uri = "http://api.microsofttranslator.com/v2/Http.svc/GetLanguagesForTranslate";
             WebRequest WebRequest = WebRequest.Create(uri);
@@ -162,9 +158,7 @@ namespace MSTranslatorTAPDemo
                 {
                     DataContractSerializer dcs = new DataContractSerializer(typeof(List<string>));
                     List<string> languagesForTranslate = (List<string>) dcs.ReadObject(stream);
-                    friendlyName =
-                        languagesForTranslate
-                            .ToArray(); //put the list of language codes into an array to pass to the method to get the friendly name.
+                    return languagesForTranslate;
                 }
             }
             finally
@@ -172,7 +166,6 @@ namespace MSTranslatorTAPDemo
                 if (response != null)
                 {
                     response.Close();
-                    response = null;
                 }
             }
         }
