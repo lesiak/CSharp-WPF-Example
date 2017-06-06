@@ -30,21 +30,30 @@ namespace MSTranslatorTAPDemo
             return GetAndDeserialize(uri, authToken, DeserializeFromStream<List<string>>);
         }
 
-        //*****CODE TO GET TRANSLATABLE LANGAUGE FRIENDLY NAMES FROM THE TWO CHARACTER CODES*****
-        public static Dictionary<string, string> GetLanguageNamesMethod(string authToken, List<string> languageCodes)
+        /// <summary>
+        /// CODE TO GET TRANSLATABLE LANGAUGE FRIENDLY NAMES FROM THE TWO CHARACTER CODES
+        /// </summary>
+        /// <param name="authToken"></param>
+        /// <param name="languageCodes"></param>
+        /// <returns></returns>
+        public static List<LangDesc> GetLanguageNamesMethod(string authToken, List<string> languageCodes)
         {
-            string uri = "http://api.microsofttranslator.com/v2/Http.svc/GetLanguageNames?locale=en";
-            
-
+            const string uri = "http://api.microsofttranslator.com/v2/Http.svc/GetLanguageNames?locale=en";
             var languageNames = PostAndDeserializeResponse(uri, authToken, languageCodes, DeserializeFromStream<List<string>>);
-
-            var languageCodesAndTitles = new Dictionary<string, string>();
-            foreach (var result in languageNames.Zip(languageNames, (langName, langCode) => Tuple.Create(langName, langCode)))
-            {
-                languageCodesAndTitles.Add(result.Item1, result.Item2);
-            }
-            return languageCodesAndTitles;
+            return languageNames.Zip(languageCodes, (langName, langCode) => new LangDesc(langName, langCode)).ToList();
             
+        }
+
+        public class LangDesc
+        {
+            public LangDesc(string name, string code)
+            {
+                Name = name;
+                Code = code;
+            }
+
+            public string Name { get; }
+            public string Code { get; }
         }
 
         private static TRespdata PostAndDeserializeResponse<TPostdata, TRespdata>(string uri, string authToken, TPostdata postData, Func<Stream, TRespdata> deserializeFunc)

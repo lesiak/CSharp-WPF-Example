@@ -28,7 +28,7 @@ namespace MSTranslatorTAPDemo
         private List<string> speakLanguages;
 
         // Dictionary to map language code from friendly name
-        private Dictionary<string, string> languageCodesAndTitles = new Dictionary<string, string>();
+        private List<TranslateApi.LangDesc> languageCodesAndTitles = new List<TranslateApi.LangDesc>();
 
         public MainWindow()
         {
@@ -45,25 +45,27 @@ namespace MSTranslatorTAPDemo
         private void enumLanguages()
         {
             //run a loop to load the combobox from the dictionary
-            var count = languageCodesAndTitles.Count;
-
-            for (int i = 0; i < count; i++)
+            LanguageComboBox.DisplayMemberPath = "Name";
+            LanguageComboBox.SelectedValuePath = "Code";
+            foreach (var langDesc in languageCodesAndTitles)
             {
-                LanguageComboBox.Items.Add(languageCodesAndTitles.ElementAt(i).Key);
-            }
+                LanguageComboBox.Items.Add(langDesc);
+            } 
         }
 
         //*****BUTTON TO START TRANSLATION PROCESS
         private void translateButton_Click(object sender, EventArgs e)
         {
             string languageCode;
-            languageCodesAndTitles.TryGetValue(LanguageComboBox.Text,
-                out languageCode); //get the language code from the dictionary based on the selection in the combobox
+            languageCode = (string)LanguageComboBox.SelectedValue;
+            //languageCodesAndTitles.TryGetValue(LanguageComboBox.Text,
+            //    out languageCode); //get the language code from the dictionary based on the selection in the combobox
 
-            if (languageCode == null) //in case no language is selected.
-            {
-                languageCode = "en";
-            }
+          //  if (tup == null) //in case no language is selected.
+          //  {
+//
+  //              languageCode = "en";
+    //        }
 
             //*****BEGIN CODE TO MAKE THE CALL TO THE TRANSLATOR SERVICE TO PERFORM A TRANSLATION FROM THE USER TEXT ENTERED INCLUDES A CALL TO A SPEECH METHOD*****
 
@@ -140,12 +142,6 @@ namespace MSTranslatorTAPDemo
                 }
             }
         }
-
-
-       
-
-
-        
 
        
     }
