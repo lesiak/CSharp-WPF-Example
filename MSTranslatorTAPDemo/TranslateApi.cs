@@ -29,6 +29,47 @@ namespace MSTranslatorTAPDemo
             return GetAndDeserialize(uri, authToken, DeserializeFromStream<List<string>>);
         }
 
+        //*****CODE TO GET TRANSLATABLE LANGAUGE FRIENDLY NAMES FROM THE TWO CHARACTER CODES*****
+        public static Dictionary<string, string> GetLanguageNamesMethod(string authToken, string[] languageCodes)
+        {
+            string uri = "http://api.microsofttranslator.com/v2/Http.svc/GetLanguageNames?locale=en";
+            Dictionary<string, string> languageCodesAndTitles = new Dictionary<string, string>();
+            // create the request
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(uri);
+            request.Headers.Add("Authorization", authToken);
+            request.ContentType = "text/xml";
+            request.Method = "POST";
+            DataContractSerializer dcs = new DataContractSerializer(Type.GetType("System.String[]"));
+            using (Stream stream = request.GetRequestStream())
+            {
+                dcs.WriteObject(stream, languageCodes);
+            }
+            WebResponse response = null;
+            try
+            {
+                response = request.GetResponse();
+
+                using (Stream stream = response.GetResponseStream())
+                {
+                    string[] languageNames = (string[])dcs.ReadObject(stream);
+
+                    for (int i = 0; i < languageNames.Length; i++)
+                    {
+                        languageCodesAndTitles.Add(languageNames[i], languageCodes[i]); 
+                    }
+                    return languageCodesAndTitles;
+                }
+            }
+            finally
+            {
+                if (response != null)
+                {
+                    response.Close();
+                    response = null;
+                }
+            }
+        }
+
         private static T GetAndDeserialize<T>(string uri, string authToken, Func<Stream, T> deserializeFunc)
         {
             var httpWebRequest = WebRequest.Create(uri);

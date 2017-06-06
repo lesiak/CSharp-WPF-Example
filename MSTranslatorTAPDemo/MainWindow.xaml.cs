@@ -35,7 +35,7 @@ namespace MSTranslatorTAPDemo
             InitializeComponent();
             tokenProvider = new AzureAuthToken(TEXT_TRANSLATION_API_SUBSCRIPTION_KEY);
             var languageCodes = TranslateApi.GetLanguageCodesForTranslate(tokenProvider.GetAccessToken()).ToArray();
-            GetLanguageNamesMethod(tokenProvider.GetAccessToken(), languageCodes);
+            languageCodesAndTitles = TranslateApi.GetLanguageNamesMethod(tokenProvider.GetAccessToken(), languageCodes);
             speakLanguages = TranslateApi.GetLanguagesForSpeakMethod(tokenProvider
                 .GetAccessToken()); //List of languages that have a synthetic voice for text to speech
             enumLanguages(); //Create the drop down list of langauges
@@ -145,45 +145,7 @@ namespace MSTranslatorTAPDemo
        
 
 
-        //*****CODE TO GET TRANSLATABLE LANGAUGE FRIENDLY NAMES FROM THE TWO CHARACTER CODES*****
-        private void GetLanguageNamesMethod(string authToken, string[] languageCodes)
-        {
-            string uri = "http://api.microsofttranslator.com/v2/Http.svc/GetLanguageNames?locale=en";
-            // create the request
-            HttpWebRequest request = (HttpWebRequest) WebRequest.Create(uri);
-            request.Headers.Add("Authorization", tokenProvider.GetAccessToken());
-            request.ContentType = "text/xml";
-            request.Method = "POST";
-            DataContractSerializer dcs = new DataContractSerializer(Type.GetType("System.String[]"));
-            using (Stream stream = request.GetRequestStream())
-            {
-                dcs.WriteObject(stream, languageCodes);
-            }
-            WebResponse response = null;
-            try
-            {
-                response = request.GetResponse();
-
-                using (Stream stream = response.GetResponseStream())
-                {
-                    string[] languageNames = (string[]) dcs.ReadObject(stream);
-
-                    for (int i = 0; i < languageNames.Length; i++)
-                    {
-                        languageCodesAndTitles.Add(languageNames[i],
-                            languageCodes[i]); //load the dictionary for the combo box
-                    }
-                }
-            }
-            finally
-            {
-                if (response != null)
-                {
-                    response.Close();
-                    response = null;
-                }
-            }
-        }
+        
 
        
     }
