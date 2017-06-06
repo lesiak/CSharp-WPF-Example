@@ -39,9 +39,9 @@ namespace MSTranslatorTAPDemo
             var languageNames = PostAndDeserializeResponse(uri, authToken, languageCodes, DeserializeFromStream<List<string>>);
 
             var languageCodesAndTitles = new Dictionary<string, string>();
-            for (int i = 0; i < languageNames.Count; i++)
+            foreach (var result in languageNames.Zip(languageNames, (langName, langCode) => Tuple.Create(langName, langCode)))
             {
-                languageCodesAndTitles.Add(languageNames[i], languageCodes[i]);
+                languageCodesAndTitles.Add(result.Item1, result.Item2);
             }
             return languageCodesAndTitles;
             
