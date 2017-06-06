@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Runtime.Serialization;
 
@@ -30,7 +31,7 @@ namespace MSTranslatorTAPDemo
         }
 
         //*****CODE TO GET TRANSLATABLE LANGAUGE FRIENDLY NAMES FROM THE TWO CHARACTER CODES*****
-        public static Dictionary<string, string> GetLanguageNamesMethod(string authToken, string[] languageCodes)
+        public static Dictionary<string, string> GetLanguageNamesMethod(string authToken, List<string> languageCodes)
         {
             string uri = "http://api.microsofttranslator.com/v2/Http.svc/GetLanguageNames?locale=en";
             Dictionary<string, string> languageCodesAndTitles = new Dictionary<string, string>();
@@ -39,7 +40,7 @@ namespace MSTranslatorTAPDemo
             request.Headers.Add("Authorization", authToken);
             request.ContentType = "text/xml";
             request.Method = "POST";
-            DataContractSerializer dcs = new DataContractSerializer(typeof(string[]));
+            DataContractSerializer dcs = new DataContractSerializer(typeof(List<string>));
             using (Stream stream = request.GetRequestStream())
             {
                 dcs.WriteObject(stream, languageCodes);
@@ -51,9 +52,9 @@ namespace MSTranslatorTAPDemo
 
                 using (Stream stream = response.GetResponseStream())
                 {
-                    string[] languageNames = (string[])dcs.ReadObject(stream);
+                    var languageNames = (List<string>)dcs.ReadObject(stream);
 
-                    for (int i = 0; i < languageNames.Length; i++)
+                    for (int i = 0; i < languageNames.Count; i++)
                     {
                         languageCodesAndTitles.Add(languageNames[i], languageCodes[i]); 
                     }

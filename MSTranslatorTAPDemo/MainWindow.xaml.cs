@@ -34,7 +34,7 @@ namespace MSTranslatorTAPDemo
         {
             InitializeComponent();
             tokenProvider = new AzureAuthToken(TEXT_TRANSLATION_API_SUBSCRIPTION_KEY);
-            var languageCodes = TranslateApi.GetLanguageCodesForTranslate(tokenProvider.GetAccessToken()).ToArray();
+            var languageCodes = TranslateApi.GetLanguageCodesForTranslate(tokenProvider.GetAccessToken());
             languageCodesAndTitles = TranslateApi.GetLanguageNamesMethod(tokenProvider.GetAccessToken(), languageCodes);
             speakLanguages = TranslateApi.GetLanguagesForSpeakMethod(tokenProvider
                 .GetAccessToken()); //List of languages that have a synthetic voice for text to speech
