@@ -47,14 +47,14 @@ namespace MSTranslatorTAPDemo
             
         }
 
-        private static TRESPDATA PostAndDeserializeResponse<TPOSTDATA, TRESPDATA>(string uri, string authToken, TPOSTDATA postData, Func<Stream, TRESPDATA> deserializeFunc)
+        private static TRespdata PostAndDeserializeResponse<TPostdata, TRespdata>(string uri, string authToken, TPostdata postData, Func<Stream, TRespdata> deserializeFunc)
         {          
             // create the request
             var request = WebRequest.Create(uri);
             request.Headers.Add("Authorization", authToken);
             request.ContentType = "text/xml";
             request.Method = "POST";
-            var serializer = new DataContractSerializer(typeof(TPOSTDATA));
+            var serializer = new DataContractSerializer(typeof(TPostdata));
             using (var stream = request.GetRequestStream())
             {
                 serializer.WriteObject(stream, postData);
@@ -65,7 +65,7 @@ namespace MSTranslatorTAPDemo
                 response = request.GetResponse();
                 using (var stream = response.GetResponseStream())
                 {
-                    var respData = (TRESPDATA)serializer.ReadObject(stream);
+                    var respData = (TRespdata)serializer.ReadObject(stream);
                     return respData;
                 }
             }
