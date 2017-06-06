@@ -34,7 +34,7 @@ namespace MSTranslatorTAPDemo
         {
             InitializeComponent();
             tokenProvider = new AzureAuthToken(TEXT_TRANSLATION_API_SUBSCRIPTION_KEY);
-            var languageCodes = GetLanguageCodesForTranslate().ToArray();
+            var languageCodes = TranslateApi.GetLanguageCodesForTranslate(tokenProvider.GetAccessToken()).ToArray();
             GetLanguageNamesMethod(tokenProvider.GetAccessToken(), languageCodes);
             speakLanguages = TranslateApi.GetLanguagesForSpeakMethod(tokenProvider
                 .GetAccessToken()); //List of languages that have a synthetic voice for text to speech
@@ -142,33 +142,7 @@ namespace MSTranslatorTAPDemo
         }
 
 
-        //*****CODE TO GET TRANSLATABLE LANGAUGE CODES*****
-        private List<string> GetLanguageCodesForTranslate()
-        {
-            string uri = "http://api.microsofttranslator.com/v2/Http.svc/GetLanguagesForTranslate";
-            WebRequest WebRequest = WebRequest.Create(uri);
-            WebRequest.Headers.Add("Authorization", tokenProvider.GetAccessToken());
-
-            WebResponse response = null;
-
-            try
-            {
-                response = WebRequest.GetResponse();
-                using (Stream stream = response.GetResponseStream())
-                {
-                    DataContractSerializer dcs = new DataContractSerializer(typeof(List<string>));
-                    List<string> languagesForTranslate = (List<string>) dcs.ReadObject(stream);
-                    return languagesForTranslate;
-                }
-            }
-            finally
-            {
-                if (response != null)
-                {
-                    response.Close();
-                }
-            }
-        }
+       
 
 
         //*****CODE TO GET TRANSLATABLE LANGAUGE FRIENDLY NAMES FROM THE TWO CHARACTER CODES*****

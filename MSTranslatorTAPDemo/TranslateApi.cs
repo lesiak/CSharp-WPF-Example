@@ -19,6 +19,16 @@ namespace MSTranslatorTAPDemo
             return GetAndDeserialize(uri, authToken, DeserializeFromStream<List<string>>);
         }
 
+        /// <summary>
+        /// CODE TO GET TRANSLATABLE LANGAUGE CODES
+        /// </summary>
+        /// <returns></returns>
+        public static List<string> GetLanguageCodesForTranslate(string authToken)
+        {
+            const string uri = "http://api.microsofttranslator.com/v2/Http.svc/GetLanguagesForTranslate";
+            return GetAndDeserialize(uri, authToken, DeserializeFromStream<List<string>>);
+        }
+
         private static T GetAndDeserialize<T>(string uri, string authToken, Func<Stream, T> deserializeFunc)
         {
             var httpWebRequest = WebRequest.Create(uri);
