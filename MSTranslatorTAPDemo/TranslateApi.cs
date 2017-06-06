@@ -34,31 +34,39 @@ namespace MSTranslatorTAPDemo
         public static Dictionary<string, string> GetLanguageNamesMethod(string authToken, List<string> languageCodes)
         {
             string uri = "http://api.microsofttranslator.com/v2/Http.svc/GetLanguageNames?locale=en";
-            Dictionary<string, string> languageCodesAndTitles = new Dictionary<string, string>();
+            
+
+            var languageNames = PostAndDeserializeResponse(uri, authToken, languageCodes, DeserializeFromStream<List<string>>);
+
+            var languageCodesAndTitles = new Dictionary<string, string>();
+            for (int i = 0; i < languageNames.Count; i++)
+            {
+                languageCodesAndTitles.Add(languageNames[i], languageCodes[i]);
+            }
+            return languageCodesAndTitles;
+            
+        }
+
+        private static TRESPDATA PostAndDeserializeResponse<TPOSTDATA, TRESPDATA>(string uri, string authToken, TPOSTDATA postData, Func<Stream, TRESPDATA> deserializeFunc)
+        {          
             // create the request
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(uri);
+            var request = WebRequest.Create(uri);
             request.Headers.Add("Authorization", authToken);
             request.ContentType = "text/xml";
             request.Method = "POST";
-            DataContractSerializer dcs = new DataContractSerializer(typeof(List<string>));
-            using (Stream stream = request.GetRequestStream())
+            var serializer = new DataContractSerializer(typeof(TPOSTDATA));
+            using (var stream = request.GetRequestStream())
             {
-                dcs.WriteObject(stream, languageCodes);
+                serializer.WriteObject(stream, postData);
             }
             WebResponse response = null;
             try
             {
                 response = request.GetResponse();
-
-                using (Stream stream = response.GetResponseStream())
+                using (var stream = response.GetResponseStream())
                 {
-                    var languageNames = (List<string>)dcs.ReadObject(stream);
-
-                    for (int i = 0; i < languageNames.Count; i++)
-                    {
-                        languageCodesAndTitles.Add(languageNames[i], languageCodes[i]); 
-                    }
-                    return languageCodesAndTitles;
+                    var respData = (TRESPDATA)serializer.ReadObject(stream);
+                    return respData;
                 }
             }
             finally
@@ -66,7 +74,6 @@ namespace MSTranslatorTAPDemo
                 if (response != null)
                 {
                     response.Close();
-                    response = null;
                 }
             }
         }
