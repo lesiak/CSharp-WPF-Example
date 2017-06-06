@@ -39,7 +39,7 @@ namespace MSTranslatorTAPDemo
             request.Headers.Add("Authorization", authToken);
             request.ContentType = "text/xml";
             request.Method = "POST";
-            DataContractSerializer dcs = new DataContractSerializer(Type.GetType("System.String[]"));
+            DataContractSerializer dcs = new DataContractSerializer(typeof(string[]));
             using (Stream stream = request.GetRequestStream())
             {
                 dcs.WriteObject(stream, languageCodes);
