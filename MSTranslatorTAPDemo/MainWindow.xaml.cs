@@ -59,7 +59,7 @@ namespace MSTranslatorTAPDemo
 
             string translatedText = TranslateApi.Translate(tokenProvider.GetAccessToken(), txtToTranslate, languageCode);
 
-            translatedTextLabel.Content = DateTime.Now + "Translation -->   " + translatedText;
+            translatedTextLabel.Content = "Translation -->   " + translatedText;
 
             if (speakLanguages.Contains(languageCode) && txtToTranslate != "")
             {

@@ -45,17 +45,16 @@ namespace MSTranslatorTAPDemo
         public static List<LangDesc> GetLanguageNamesMethod(string authToken, List<string> languageCodes)
         {
             const string uri = "http://api.microsofttranslator.com/v2/Http.svc/GetLanguageNames?locale=en";
-            var languageNames = PostAndDeserializeResponse(uri, authToken, languageCodes, DeserializeFromStream<List<string>>);
+            var languageNames = PostAndDeserializeResponse(uri, authToken, languageCodes,
+                DeserializeFromStream<List<string>>);
             return languageNames.Zip(languageCodes, (langName, langCode) => new LangDesc(langName, langCode)).ToList();
-            
         }
 
         public static string Translate(string authToken, string txtToTranslate, string toLanguageCode)
         {
-            string uri =
-                string.Format(
-                    "http://api.microsofttranslator.com/v2/Http.svc/Translate?text=" +
-                    System.Web.HttpUtility.UrlEncode(txtToTranslate) + "&to={0}", toLanguageCode);
+            string uri = string.Format(
+                "http://api.microsofttranslator.com/v2/Http.svc/Translate?text=" +
+                HttpUtility.UrlEncode(txtToTranslate) + "&to={0}", toLanguageCode);
 
             return GetAndDeserialize(uri, authToken, GetXmlInnerText);
         }
@@ -63,10 +62,9 @@ namespace MSTranslatorTAPDemo
 
         public static void SpeakMethod(string authToken, string textToSpeak, String languageCode, Action<Stream> playAction)
         {
-            string uri =
-                string.Format(
-                    "http://api.microsofttranslator.com/v2/Http.svc/Speak?text={0}&language={1}&format=" +
-                    HttpUtility.UrlEncode("audio/wav") + "&options=MaxQuality", textToSpeak, languageCode);
+            string uri = string.Format(
+                "http://api.microsofttranslator.com/v2/Http.svc/Speak?text={0}&language={1}&format=" +
+                HttpUtility.UrlEncode("audio/wav") + "&options=MaxQuality", textToSpeak, languageCode);
 
             GetAndRunAction(uri, authToken, playAction);
         }
@@ -87,10 +85,7 @@ namespace MSTranslatorTAPDemo
             }
             finally
             {
-                if (response != null)
-                {
-                    response.Close();
-                }
+                response?.Close();
             }
         }
 
@@ -110,16 +105,14 @@ namespace MSTranslatorTAPDemo
             }
             finally
             {
-                if (response != null)
-                {
-                    response.Close();
-                }
+                response?.Close();
             }
         }
 
 
-        private static TRespdata PostAndDeserializeResponse<TPostdata, TRespdata>(string uri, string authToken, TPostdata postData, Func<Stream, TRespdata> deserializeFunc)
-        {          
+        private static TRespdata PostAndDeserializeResponse<TPostdata, TRespdata>(string uri, string authToken,
+            TPostdata postData, Func<Stream, TRespdata> deserializeFunc)
+        {
             // create the request
             var request = WebRequest.Create(uri);
             request.Headers.Add("Authorization", authToken);
@@ -141,10 +134,7 @@ namespace MSTranslatorTAPDemo
             }
             finally
             {
-                if (response != null)
-                {
-                    response.Close();
-                }
+                response?.Close();
             }
         }
 
@@ -152,13 +142,9 @@ namespace MSTranslatorTAPDemo
         private static string GetXmlInnerText(Stream stream)
         {
             Encoding encode = Encoding.GetEncoding("utf-8");
-
             StreamReader translatedStream = new StreamReader(stream, encode);
-
             System.Xml.XmlDocument xTranslation = new System.Xml.XmlDocument();
-
             xTranslation.LoadXml(translatedStream.ReadToEnd());
-
             return xTranslation.InnerText;
         }
 
@@ -166,7 +152,7 @@ namespace MSTranslatorTAPDemo
         private static T DeserializeFromStream<T>(Stream stream)
         {
             var serializer = new DataContractSerializer(typeof(T));
-            var retList = (T)serializer.ReadObject(stream);
+            var retList = (T) serializer.ReadObject(stream);
             return retList;
         }
 
