@@ -11,7 +11,7 @@ namespace MSTranslatorTAPDemo
 {
     /// <summary>
     /// Client for MS Translate api.
-    /// Documentation https://docs.microsofttranslator.com/text-translate.html
+    /// Documentation, https://docs.microsofttranslator.com/text-translate.html
     /// </summary>
     public class TranslateApi
     {
@@ -136,8 +136,7 @@ namespace MSTranslatorTAPDemo
                 response = request.GetResponse();
                 using (var stream = response.GetResponseStream())
                 {
-                    var respData = (TRespdata)serializer.ReadObject(stream);
-                    return respData;
+                    return deserializeFunc(stream);
                 }
             }
             finally
