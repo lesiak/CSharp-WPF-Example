@@ -3,8 +3,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Runtime.Serialization;
 using System.Text;
+using System.Threading.Tasks;
 using System.Web;
 
 namespace MSTranslatorTAPDemo
@@ -15,25 +18,27 @@ namespace MSTranslatorTAPDemo
     /// </summary>
     public class TranslateApi
     {
+        public static HttpClient httpClient = new HttpClient();
+
         /// <summary>
         /// List of languages that have a synthetic voice for text to speech
         /// </summary>
         /// <param name="authToken"></param>
         /// <returns></returns>
-        public static List<string> GetLanguagesForSpeakMethod(string authToken)
+        public static async Task<List<string>> GetLanguagesForSpeakMethod(string authToken)
         {
             const string uri = "http://api.microsofttranslator.com/v2/Http.svc/GetLanguagesForSpeak";
-            return GetAndDeserialize(uri, authToken, DeserializeFromStream<List<string>>);
+            return await GetAndDeserialize(uri, authToken, DeserializeFromStream<List<string>>);
         }
 
         /// <summary>
         /// CODE TO GET TRANSLATABLE LANGAUGE CODES
         /// </summary>
         /// <returns></returns>
-        public static List<string> GetLanguageCodesForTranslate(string authToken)
+        public static async Task<List<string>> GetLanguageCodesForTranslate(string authToken)
         {
             const string uri = "http://api.microsofttranslator.com/v2/Http.svc/GetLanguagesForTranslate";
-            return GetAndDeserialize(uri, authToken, DeserializeFromStream<List<string>>);
+            return await GetAndDeserialize(uri, authToken, DeserializeFromStream<List<string>>);
         }
 
         /// <summary>
@@ -50,62 +55,54 @@ namespace MSTranslatorTAPDemo
             return languageNames.Zip(languageCodes, (langName, langCode) => new LangDesc(langName, langCode)).ToList();
         }
 
-        public static string Translate(string authToken, string txtToTranslate, string toLanguageCode)
+        public static async Task<string> Translate(string authToken, string txtToTranslate, string toLanguageCode)
         {
             string uri = string.Format(
                 "http://api.microsofttranslator.com/v2/Http.svc/Translate?text=" +
                 HttpUtility.UrlEncode(txtToTranslate) + "&to={0}", toLanguageCode);
 
-            return GetAndDeserialize(uri, authToken, GetXmlInnerText);
+            return await GetAndDeserialize(uri, authToken, GetXmlInnerText);
         }
 
 
+        public static async Task SpeakMethod(string authToken, string textToSpeak, string languageCode,
             Action<Stream> playAction)
         {
             string uri = string.Format(
                 "http://api.microsofttranslator.com/v2/Http.svc/Speak?text={0}&language={1}&format=" +
                 HttpUtility.UrlEncode("audio/wav") + "&options=MaxQuality", textToSpeak, languageCode);
 
-            GetAndRunAction(uri, authToken, playAction);
+            await GetAndRunAction(uri, authToken, playAction);
         }
 
 
-        private static void GetAndRunAction(string uri, string authToken, Action<Stream> action)
+        private static async Task GetAndRunAction(string uri, string authToken, Action<Stream> action)
         {
-            var httpWebRequest = WebRequest.Create(uri);
-            httpWebRequest.Headers.Add("Authorization", authToken);
-            WebResponse response = null;
-            try
+            var request = new HttpRequestMessage(HttpMethod.Get, uri);
+            request.Headers.Add("Authorization", authToken);
+            using (var response = await httpClient.SendAsync(request))
             {
-                response = httpWebRequest.GetResponse();
-                using (var stream = response.GetResponseStream())
+                response.EnsureSuccessStatusCode();
+                using (var stream = await response.Content.ReadAsStreamAsync())
                 {
                     action(stream);
                 }
             }
-            finally
-            {
-                response?.Close();
-            }
         }
 
 
-        private static T GetAndDeserialize<T>(string uri, string authToken, Func<Stream, T> deserializeFunc)
+        private static async Task<T> GetAndDeserialize<T>(string uri, string authToken, Func<Stream, T> deserializeFunc)
         {
-            var httpWebRequest = WebRequest.Create(uri);
-            httpWebRequest.Headers.Add("Authorization", authToken);
-            WebResponse response = null;
-            try
+            var request = new HttpRequestMessage(HttpMethod.Get, uri);
+            request.Headers.Add("Authorization", authToken);
+            using (var response = await httpClient.SendAsync(request))
             {
-                response = httpWebRequest.GetResponse();
-                using (var stream = response.GetResponseStream())
+                response.EnsureSuccessStatusCode();
+                //response = httpWebRequest.GetResponse();
+                using (var stream = await response.Content.ReadAsStreamAsync())
                 {
                     return deserializeFunc(stream);
                 }
-            }
-            finally
-            {
-                response?.Close();
             }
         }
 

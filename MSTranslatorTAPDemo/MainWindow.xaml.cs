@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
+using System.Threading.Tasks;
 using Microsoft.Translator.Samples;
 
 namespace MSTranslatorTAPDemo
@@ -31,10 +32,15 @@ namespace MSTranslatorTAPDemo
         {
             InitializeComponent();
             tokenProvider = new AzureAuthToken(TEXT_TRANSLATION_API_SUBSCRIPTION_KEY);
-            var languageCodes = TranslateApi.GetLanguageCodesForTranslate(tokenProvider.GetAccessToken());
+            InitializeUiData();
+        }
+
+        private async void InitializeUiData()
+        {
+            var languageCodes = await TranslateApi.GetLanguageCodesForTranslate(tokenProvider.GetAccessToken());
             var languageCodesAndTitles = TranslateApi.GetLanguageNamesMethod(tokenProvider.GetAccessToken(), languageCodes);
             //List of languages that have a synthetic voice for text to speech
-            speakLanguages = TranslateApi.GetLanguagesForSpeakMethod(tokenProvider.GetAccessToken()); 
+            speakLanguages = await TranslateApi.GetLanguagesForSpeakMethod(tokenProvider.GetAccessToken());
             PopulateLanguagesComboBox(languageCodesAndTitles); //Create the drop down list of langauges
         }
 
@@ -49,7 +55,7 @@ namespace MSTranslatorTAPDemo
         }
 
         //*****BUTTON TO START TRANSLATION PROCESS
-        private void translateButton_Click(object sender, EventArgs e)
+        private async void translateButton_Click(object sender, EventArgs e)
         {
             var languageCode = (string)LanguageComboBox.SelectedValue ?? "en";
 
@@ -57,23 +63,23 @@ namespace MSTranslatorTAPDemo
 
             string txtToTranslate = textToTranslate.Text;
 
-            string translatedText = TranslateApi.Translate(tokenProvider.GetAccessToken(), txtToTranslate, languageCode);
+            string translatedText = await TranslateApi.Translate(tokenProvider.GetAccessToken(), txtToTranslate, languageCode);
 
             translatedTextLabel.Content = "Translation -->   " + translatedText;
 
             if (speakLanguages.Contains(languageCode) && txtToTranslate != "")
             {
                 //call the method to speak the translated text
-                SpeakMethod(tokenProvider.GetAccessToken(), translatedText, languageCode);
+                await SpeakMethod(tokenProvider.GetAccessToken(), translatedText, languageCode);
             }
         }
 
        
 
         //*****SPEECH CODE*****
-        private void SpeakMethod(string authToken, string textToSpeak, String languageCode)
+        private async Task SpeakMethod(string authToken, string textToSpeak, String languageCode)
         {
-           TranslateApi.SpeakMethod(authToken, textToSpeak, languageCode, PlayStream);
+           await TranslateApi.SpeakMethod(authToken, textToSpeak, languageCode, PlayStream);
         }
 
 
