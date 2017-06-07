@@ -52,39 +52,32 @@ namespace MSTranslatorTAPDemo
                     "http://api.microsofttranslator.com/v2/Http.svc/Translate?text=" +
                     System.Web.HttpUtility.UrlEncode(txtToTranslate) + "&to={0}", toLanguageCode);
 
-            WebRequest translationWebRequest = WebRequest.Create(uri);
-
-            translationWebRequest.Headers.Add("Authorization",
-                authToken); //header value is the "Bearer plus the token from ADM
-
-            WebResponse response = null;
-
-            response = translationWebRequest.GetResponse();
-
-            Stream stream = response.GetResponseStream();
-
-            Encoding encode = Encoding.GetEncoding("utf-8");
-
-            StreamReader translatedStream = new StreamReader(stream, encode);
-
-            System.Xml.XmlDocument xTranslation = new System.Xml.XmlDocument();
-
-            xTranslation.LoadXml(translatedStream.ReadToEnd());
-
-            return xTranslation.InnerText;
+            return GetAndDeserialize(uri, authToken, GetXmlInnerText);
         }
 
-        public class LangDesc
+
+        private static T GetAndDeserialize<T>(string uri, string authToken, Func<Stream, T> deserializeFunc)
         {
-            public LangDesc(string name, string code)
+            var httpWebRequest = WebRequest.Create(uri);
+            httpWebRequest.Headers.Add("Authorization", authToken);
+            WebResponse response = null;
+            try
             {
-                Name = name;
-                Code = code;
+                response = httpWebRequest.GetResponse();
+                using (var stream = response.GetResponseStream())
+                {
+                    return deserializeFunc(stream);
+                }
             }
-
-            public string Name { get; }
-            public string Code { get; }
+            finally
+            {
+                if (response != null)
+                {
+                    response.Close();
+                }
+            }
         }
+
 
         private static TRespdata PostAndDeserializeResponse<TPostdata, TRespdata>(string uri, string authToken, TPostdata postData, Func<Stream, TRespdata> deserializeFunc)
         {          
@@ -117,33 +110,39 @@ namespace MSTranslatorTAPDemo
             }
         }
 
-        private static T GetAndDeserialize<T>(string uri, string authToken, Func<Stream, T> deserializeFunc)
+
+        private static string GetXmlInnerText(Stream stream)
         {
-            var httpWebRequest = WebRequest.Create(uri);
-            httpWebRequest.Headers.Add("Authorization", authToken);
-            WebResponse response = null;
-            try
-            {
-                response = httpWebRequest.GetResponse();
-                using (var stream = response.GetResponseStream())
-                {
-                    return deserializeFunc(stream);
-                }
-            }
-            finally
-            {
-                if (response != null)
-                {
-                    response.Close();
-                }
-            }
+            Encoding encode = Encoding.GetEncoding("utf-8");
+
+            StreamReader translatedStream = new StreamReader(stream, encode);
+
+            System.Xml.XmlDocument xTranslation = new System.Xml.XmlDocument();
+
+            xTranslation.LoadXml(translatedStream.ReadToEnd());
+
+            return xTranslation.InnerText;
         }
+
 
         private static T DeserializeFromStream<T>(Stream stream)
         {
             var serializer = new DataContractSerializer(typeof(T));
             var retList = (T)serializer.ReadObject(stream);
             return retList;
+        }
+
+
+        public class LangDesc
+        {
+            public LangDesc(string name, string code)
+            {
+                Name = name;
+                Code = code;
+            }
+
+            public string Name { get; }
+            public string Code { get; }
         }
     }
 }
