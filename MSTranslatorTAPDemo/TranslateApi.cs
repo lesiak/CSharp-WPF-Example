@@ -60,7 +60,7 @@ namespace MSTranslatorTAPDemo
         }
 
 
-        public static void SpeakMethod(string authToken, string textToSpeak, String languageCode, Action<Stream> playAction)
+            Action<Stream> playAction)
         {
             string uri = string.Format(
                 "http://api.microsofttranslator.com/v2/Http.svc/Speak?text={0}&language={1}&format=" +
