@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Runtime.Serialization;
 using System.Text;
+using System.Web;
 
 namespace MSTranslatorTAPDemo
 {
@@ -53,6 +54,40 @@ namespace MSTranslatorTAPDemo
                     System.Web.HttpUtility.UrlEncode(txtToTranslate) + "&to={0}", toLanguageCode);
 
             return GetAndDeserialize(uri, authToken, GetXmlInnerText);
+        }
+
+
+        public static void SpeakMethod(string authToken, string textToSpeak, String languageCode, Action<Stream> playAction)
+        {
+            string uri =
+                string.Format(
+                    "http://api.microsofttranslator.com/v2/Http.svc/Speak?text={0}&language={1}&format=" +
+                    HttpUtility.UrlEncode("audio/wav") + "&options=MaxQuality", textToSpeak, languageCode);
+
+            GetAndRunAction(uri, authToken, playAction);
+        }
+
+
+        private static void GetAndRunAction(string uri, string authToken, Action<Stream> action)
+        {
+            var httpWebRequest = WebRequest.Create(uri);
+            httpWebRequest.Headers.Add("Authorization", authToken);
+            WebResponse response = null;
+            try
+            {
+                response = httpWebRequest.GetResponse();
+                using (var stream = response.GetResponseStream())
+                {
+                    action(stream);
+                }
+            }
+            finally
+            {
+                if (response != null)
+                {
+                    response.Close();
+                }
+            }
         }
 
 

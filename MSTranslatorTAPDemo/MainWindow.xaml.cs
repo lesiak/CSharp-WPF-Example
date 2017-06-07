@@ -71,44 +71,20 @@ namespace MSTranslatorTAPDemo
        
 
         //*****SPEECH CODE*****
-        private void SpeakMethod(string authToken, string textToVoice, String languageCode)
+        private void SpeakMethod(string authToken, string textToSpeak, String languageCode)
         {
-            string translatedString = textToVoice;
-
-            string uri =
-                string.Format(
-                    "http://api.microsofttranslator.com/v2/Http.svc/Speak?text={0}&language={1}&format=" +
-                    HttpUtility.UrlEncode("audio/wav") + "&options=MaxQuality", translatedString, languageCode);
-
-            WebRequest webRequest = WebRequest.Create(uri);
-            webRequest.Headers.Add("Authorization", authToken);
-            WebResponse response = null;
-            try
-            {
-                response = webRequest.GetResponse();
-
-                using (Stream stream = response.GetResponseStream())
-                {
-                    using (SoundPlayer player = new SoundPlayer(stream))
-                    {
-                        player.Play();
-                    }
-                }
-            }
-            catch
-            {
-                throw;
-            }
-            finally
-            {
-                if (response != null)
-                {
-                    response.Close();
-                    response = null;
-                }
-            }
+           TranslateApi.SpeakMethod(authToken, textToSpeak, languageCode, PlayStream);
         }
 
+
        
+
+        private static void PlayStream(Stream stream)
+        {
+            using (SoundPlayer player = new SoundPlayer(stream))
+            {
+                player.Play();
+            }
+        }
     }
 }
