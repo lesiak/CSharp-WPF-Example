@@ -9,6 +9,10 @@ using System.Web;
 
 namespace MSTranslatorTAPDemo
 {
+    /// <summary>
+    /// Client for MS Translate api.
+    /// Documentation https://docs.microsofttranslator.com/text-translate.html
+    /// </summary>
     public class TranslateApi
     {
         /// <summary>
