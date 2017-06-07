@@ -26,27 +26,22 @@ namespace MSTranslatorTAPDemo
 
         // Cache list of languages for speech synthesis
         private List<string> speakLanguages;
-
-        // Dictionary to map language code from friendly name
-        private List<TranslateApi.LangDesc> languageCodesAndTitles = new List<TranslateApi.LangDesc>();
-
+       
         public MainWindow()
         {
             InitializeComponent();
             tokenProvider = new AzureAuthToken(TEXT_TRANSLATION_API_SUBSCRIPTION_KEY);
             var languageCodes = TranslateApi.GetLanguageCodesForTranslate(tokenProvider.GetAccessToken());
-            languageCodesAndTitles = TranslateApi.GetLanguageNamesMethod(tokenProvider.GetAccessToken(), languageCodes);
-            speakLanguages = TranslateApi.GetLanguagesForSpeakMethod(tokenProvider
-                .GetAccessToken()); //List of languages that have a synthetic voice for text to speech
-            enumLanguages(); //Create the drop down list of langauges
+            var languageCodesAndTitles = TranslateApi.GetLanguageNamesMethod(tokenProvider.GetAccessToken(), languageCodes);
+            //List of languages that have a synthetic voice for text to speech
+            speakLanguages = TranslateApi.GetLanguagesForSpeakMethod(tokenProvider.GetAccessToken()); 
+            PopulateLanguagesComboBox(languageCodesAndTitles); //Create the drop down list of langauges
         }
 
         //*****POPULATE COMBOBOX*****
-        private void enumLanguages()
+        private void PopulateLanguagesComboBox(List<TranslateApi.LangDesc> languageCodesAndTitles)
         {
             //run a loop to load the combobox from the dictionary
-            LanguageComboBox.DisplayMemberPath = "Name";
-            LanguageComboBox.SelectedValuePath = "Code";
             foreach (var langDesc in languageCodesAndTitles)
             {
                 LanguageComboBox.Items.Add(langDesc);
@@ -56,16 +51,7 @@ namespace MSTranslatorTAPDemo
         //*****BUTTON TO START TRANSLATION PROCESS
         private void translateButton_Click(object sender, EventArgs e)
         {
-            string languageCode;
-            languageCode = (string)LanguageComboBox.SelectedValue;
-            //languageCodesAndTitles.TryGetValue(LanguageComboBox.Text,
-            //    out languageCode); //get the language code from the dictionary based on the selection in the combobox
-
-          //  if (tup == null) //in case no language is selected.
-          //  {
-//
-  //              languageCode = "en";
-    //        }
+            var languageCode = (string)LanguageComboBox.SelectedValue ?? "en";
 
             //*****BEGIN CODE TO MAKE THE CALL TO THE TRANSLATOR SERVICE TO PERFORM A TRANSLATION FROM THE USER TEXT ENTERED INCLUDES A CALL TO A SPEECH METHOD*****
 

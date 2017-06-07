@@ -18,7 +18,7 @@
                 HorizontalAlignment="Left" 
                 Margin="42,152,0,0" 
                 VerticalAlignment="Top" 
-                Width="175" FontSize="14">
+                Width="175" FontSize="14" SelectedValuePath="Code" DisplayMemberPath="Name">
 
             
            
