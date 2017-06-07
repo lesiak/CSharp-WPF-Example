@@ -57,38 +57,18 @@ namespace MSTranslatorTAPDemo
 
             string txtToTranslate = textToTranslate.Text;
 
-            string uri =
-                string.Format(
-                    "http://api.microsofttranslator.com/v2/Http.svc/Translate?text=" +
-                    System.Web.HttpUtility.UrlEncode(txtToTranslate) + "&to={0}", languageCode);
+            string translatedText = TranslateApi.Translate(tokenProvider.GetAccessToken(), txtToTranslate, languageCode);
 
-            WebRequest translationWebRequest = WebRequest.Create(uri);
-
-            translationWebRequest.Headers.Add("Authorization",
-                tokenProvider.GetAccessToken()); //header value is the "Bearer plus the token from ADM
-
-            WebResponse response = null;
-
-            response = translationWebRequest.GetResponse();
-
-            Stream stream = response.GetResponseStream();
-
-            Encoding encode = Encoding.GetEncoding("utf-8");
-
-            StreamReader translatedStream = new StreamReader(stream, encode);
-
-            System.Xml.XmlDocument xTranslation = new System.Xml.XmlDocument();
-
-            xTranslation.LoadXml(translatedStream.ReadToEnd());
-
-            translatedTextLabel.Content = DateTime.Now + "Translation -->   " + xTranslation.InnerText;
+            translatedTextLabel.Content = DateTime.Now + "Translation -->   " + translatedText;
 
             if (speakLanguages.Contains(languageCode) && txtToTranslate != "")
             {
                 //call the method to speak the translated text
-                SpeakMethod(tokenProvider.GetAccessToken(), xTranslation.InnerText, languageCode);
+                SpeakMethod(tokenProvider.GetAccessToken(), translatedText, languageCode);
             }
         }
+
+       
 
         //*****SPEECH CODE*****
         private void SpeakMethod(string authToken, string textToVoice, String languageCode)
@@ -111,7 +91,7 @@ namespace MSTranslatorTAPDemo
                 {
                     using (SoundPlayer player = new SoundPlayer(stream))
                     {
-                        player.PlaySync();
+                        player.Play();
                     }
                 }
             }

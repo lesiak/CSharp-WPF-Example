@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Runtime.Serialization;
+using System.Text;
 
 namespace MSTranslatorTAPDemo
 {
@@ -42,6 +43,35 @@ namespace MSTranslatorTAPDemo
             var languageNames = PostAndDeserializeResponse(uri, authToken, languageCodes, DeserializeFromStream<List<string>>);
             return languageNames.Zip(languageCodes, (langName, langCode) => new LangDesc(langName, langCode)).ToList();
             
+        }
+
+        public static string Translate(string authToken, string txtToTranslate, string toLanguageCode)
+        {
+            string uri =
+                string.Format(
+                    "http://api.microsofttranslator.com/v2/Http.svc/Translate?text=" +
+                    System.Web.HttpUtility.UrlEncode(txtToTranslate) + "&to={0}", toLanguageCode);
+
+            WebRequest translationWebRequest = WebRequest.Create(uri);
+
+            translationWebRequest.Headers.Add("Authorization",
+                authToken); //header value is the "Bearer plus the token from ADM
+
+            WebResponse response = null;
+
+            response = translationWebRequest.GetResponse();
+
+            Stream stream = response.GetResponseStream();
+
+            Encoding encode = Encoding.GetEncoding("utf-8");
+
+            StreamReader translatedStream = new StreamReader(stream, encode);
+
+            System.Xml.XmlDocument xTranslation = new System.Xml.XmlDocument();
+
+            xTranslation.LoadXml(translatedStream.ReadToEnd());
+
+            return xTranslation.InnerText;
         }
 
         public class LangDesc
