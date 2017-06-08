@@ -23,9 +23,9 @@ namespace MSTranslatorTAPDemo
         private const string TEXT_TRANSLATION_API_SUBSCRIPTION_KEY = "ENTER_YOUR_CLIENT_SECRET";
 
         // Object to get an authentication token
-        private AzureAuthToken tokenProvider;
+        private readonly AzureAuthToken tokenProvider;
 
-        // Cache list of languages for speech synthesis
+        // List of languages that have a synthetic voice for text to speech
         private List<string> speakLanguages;
        
         public MainWindow()
@@ -38,10 +38,10 @@ namespace MSTranslatorTAPDemo
         private async void InitializeUiData()
         {
             var languageCodes = await TranslateApi.GetLanguageCodesForTranslate(tokenProvider.GetAccessToken());
-            var languageCodesAndTitles = TranslateApi.GetLanguageNamesMethod(tokenProvider.GetAccessToken(), languageCodes);
-            //List of languages that have a synthetic voice for text to speech
+            var languageCodesAndTitles = await TranslateApi.GetLanguageNamesMethod(tokenProvider.GetAccessToken(), languageCodes);
+            
             speakLanguages = await TranslateApi.GetLanguagesForSpeakMethod(tokenProvider.GetAccessToken());
-            PopulateLanguagesComboBox(await languageCodesAndTitles); //Create the drop down list of langauges
+            PopulateLanguagesComboBox(languageCodesAndTitles); //Create the drop down list of langauges
         }
 
         //*****POPULATE COMBOBOX*****
@@ -74,7 +74,6 @@ namespace MSTranslatorTAPDemo
             }
         }
 
-       
 
         //*****SPEECH CODE*****
         private async Task SpeakMethod(string authToken, string textToSpeak, String languageCode)
@@ -82,8 +81,6 @@ namespace MSTranslatorTAPDemo
            await TranslateApi.SpeakMethod(authToken, textToSpeak, languageCode, PlayStream);
         }
 
-
-       
 
         private static void PlayStream(Stream stream)
         {
