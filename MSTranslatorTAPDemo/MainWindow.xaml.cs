@@ -41,7 +41,7 @@ namespace MSTranslatorTAPDemo
             var languageCodesAndTitles = TranslateApi.GetLanguageNamesMethod(tokenProvider.GetAccessToken(), languageCodes);
             //List of languages that have a synthetic voice for text to speech
             speakLanguages = await TranslateApi.GetLanguagesForSpeakMethod(tokenProvider.GetAccessToken());
-            PopulateLanguagesComboBox(languageCodesAndTitles); //Create the drop down list of langauges
+            PopulateLanguagesComboBox(await languageCodesAndTitles); //Create the drop down list of langauges
         }
 
         //*****POPULATE COMBOBOX*****

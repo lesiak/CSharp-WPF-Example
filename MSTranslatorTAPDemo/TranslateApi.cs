@@ -2,9 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Net.Http;
-using System.Net.Http.Headers;
+using System.Net.Http.Formatting;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
@@ -47,10 +46,10 @@ namespace MSTranslatorTAPDemo
         /// <param name="authToken"></param>
         /// <param name="languageCodes"></param>
         /// <returns></returns>
-        public static List<LangDesc> GetLanguageNamesMethod(string authToken, List<string> languageCodes)
+        public static async Task<List<LangDesc>> GetLanguageNamesMethod(string authToken, List<string> languageCodes)
         {
             const string uri = "http://api.microsofttranslator.com/v2/Http.svc/GetLanguageNames?locale=en";
-            var languageNames = PostAndDeserializeResponse(uri, authToken, languageCodes,
+            var languageNames = await PostAndDeserializeResponse(uri, authToken, languageCodes,
                 DeserializeFromStream<List<string>>);
             return languageNames.Zip(languageCodes, (langName, langCode) => new LangDesc(langName, langCode)).ToList();
         }
@@ -98,7 +97,6 @@ namespace MSTranslatorTAPDemo
             using (var response = await httpClient.SendAsync(request))
             {
                 response.EnsureSuccessStatusCode();
-                //response = httpWebRequest.GetResponse();
                 using (var stream = await response.Content.ReadAsStreamAsync())
                 {
                     return deserializeFunc(stream);
@@ -107,31 +105,20 @@ namespace MSTranslatorTAPDemo
         }
 
 
-        private static TRespdata PostAndDeserializeResponse<TPostdata, TRespdata>(string uri, string authToken,
+        private static async Task<TRespdata> PostAndDeserializeResponse<TPostdata, TRespdata>(string uri, string authToken,
             TPostdata postData, Func<Stream, TRespdata> deserializeFunc)
         {
             // create the request
-            var request = WebRequest.Create(uri);
+            var request = new HttpRequestMessage(HttpMethod.Post, uri);
             request.Headers.Add("Authorization", authToken);
-            request.ContentType = "text/xml";
-            request.Method = "POST";
-            var serializer = new DataContractSerializer(typeof(TPostdata));
-            using (var stream = request.GetRequestStream())
+            request.Content = new ObjectContent<TPostdata>(postData, new XmlMediaTypeFormatter());
+            using (var response = await httpClient.SendAsync(request))
             {
-                serializer.WriteObject(stream, postData);
-            }
-            WebResponse response = null;
-            try
-            {
-                response = request.GetResponse();
-                using (var stream = response.GetResponseStream())
+                response.EnsureSuccessStatusCode();
+                using (var stream = await response.Content.ReadAsStreamAsync())
                 {
                     return deserializeFunc(stream);
                 }
-            }
-            finally
-            {
-                response?.Close();
             }
         }
 
